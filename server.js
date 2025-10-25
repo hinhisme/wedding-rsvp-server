@@ -1,63 +1,70 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
 import ExcelJS from "exceljs";
+import fs from "fs";
+import path from "path";
+import bodyParser from "body-parser";
+import { fileURLToPath } from "url";
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = process.env.PORT || 5000;
 
-const FILE_PATH = "./RSVP.xlsx";
+// Đường dẫn file Excel
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const excelPath = path.join(__dirname, "rsvp.xlsx");
 
-// 📝 Ghi RSVP vào file Excel
+// ✅ Thêm dòng này để cho phép frontend truy cập
+app.use(cors({
+  origin: ["https://ngocthang-huyentrang.vercel.app", "http://localhost:5173"],
+}));
+
+app.use(bodyParser.json());
+
+// 📩 API nhận RSVP
 app.post("/api/rsvp", async (req, res) => {
   try {
-    const { name, relation, phone, attendance, message } = req.body;
-    const now = new Date().toLocaleString("vi-VN");
+    const { name, attendance, message } = req.body;
+    const workbook = new ExcelJS.Workbook();
+    let worksheet;
 
-    let workbook;
-    if (fs.existsSync(FILE_PATH)) {
-      workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.readFile(FILE_PATH);
+    if (fs.existsSync(excelPath)) {
+      await workbook.xlsx.readFile(excelPath);
+      worksheet = workbook.getWorksheet(1);
     } else {
-      workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("RSVP");
-      sheet.addRow(["Name", "Relation", "Phone", "Attendance", "Message", "Time"]);
+      worksheet = workbook.addWorksheet("RSVP");
+      worksheet.addRow(["Tên", "Tham dự", "Lời chúc"]);
     }
 
-    const sheet = workbook.getWorksheet("RSVP") || workbook.worksheets[0];
-    sheet.addRow([name, relation, phone, attendance, message, now]);
-    await workbook.xlsx.writeFile(FILE_PATH);
+    worksheet.addRow([name, attendance, message]);
+    await workbook.xlsx.writeFile(excelPath);
 
-    res.json({ success: true, message: "RSVP saved to Excel!" });
+    res.json({ success: true, message: "Gửi thành công!" });
   } catch (error) {
-    console.error("RSVP Error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
 
-// 📋 Xem toàn bộ RSVP
+// 📤 API lấy danh sách lời chúc
 app.get("/api/rsvp", async (req, res) => {
   try {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(FILE_PATH);
-    const sheet = workbook.getWorksheet("RSVP");
-    const rows = sheet.getSheetValues().slice(2);
+    await workbook.xlsx.readFile(excelPath);
+    const worksheet = workbook.getWorksheet(1);
 
-    const data = rows.map((r) => ({
-      name: r[1],
-      relation: r[2],
-      phone: r[3],
-      attendance: r[4],
-      message: r[5],
-      time: r[6],
-    }));
+    const data = worksheet
+      .getRows(2, worksheet.rowCount - 1)
+      .map(row => ({
+        name: row.getCell(1).value,
+        attendance: row.getCell(2).value,
+        message: row.getCell(3).value,
+      }));
 
-    res.json(data.reverse());
-  } catch {
-    res.status(500).json({ error: "Không thể đọc dữ liệu" });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: "Không thể đọc file Excel" });
   }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`✅ Server chạy tại cổng ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server đang chạy tại cổng ${PORT}`));
