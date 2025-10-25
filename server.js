@@ -9,12 +9,10 @@ import { fileURLToPath } from "url";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Đường dẫn file Excel
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const excelPath = path.join(__dirname, "rsvp.xlsx");
 
-// ✅ Cho phép frontend truy cập
 app.use(
   cors({
     origin: [
@@ -26,7 +24,6 @@ app.use(
 
 app.use(bodyParser.json());
 
-// 📩 API nhận RSVP
 app.post("/api/rsvp", async (req, res) => {
   try {
     const { name, attendance, message } = req.body;
@@ -51,7 +48,6 @@ app.post("/api/rsvp", async (req, res) => {
   }
 });
 
-// 📤 API lấy danh sách lời chúc
 app.get("/api/rsvp", async (req, res) => {
   try {
     const workbook = new ExcelJS.Workbook();
@@ -72,7 +68,6 @@ app.get("/api/rsvp", async (req, res) => {
   }
 });
 
-// 📥 API tải file Excel
 app.get("/api/download", (req, res) => {
   if (fs.existsSync(excelPath)) {
     res.download(excelPath, "rsvp.xlsx");
