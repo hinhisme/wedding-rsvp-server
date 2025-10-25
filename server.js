@@ -14,10 +14,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const excelPath = path.join(__dirname, "rsvp.xlsx");
 
-// ✅ Thêm dòng này để cho phép frontend truy cập
-app.use(cors({
-  origin: ["https://ngocthang-huyentrang.vercel.app", "http://localhost:5173"],
-}));
+// ✅ Cho phép frontend truy cập
+app.use(
+  cors({
+    origin: [
+      "https://ngocthang-huyentrang.vercel.app",
+      "http://localhost:5173",
+    ],
+  })
+);
 
 app.use(bodyParser.json());
 
@@ -55,7 +60,7 @@ app.get("/api/rsvp", async (req, res) => {
 
     const data = worksheet
       .getRows(2, worksheet.rowCount - 1)
-      .map(row => ({
+      .map((row) => ({
         name: row.getCell(1).value,
         attendance: row.getCell(2).value,
         message: row.getCell(3).value,
@@ -67,4 +72,15 @@ app.get("/api/rsvp", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server đang chạy tại cổng ${PORT}`));
+// 📥 API tải file Excel
+app.get("/api/download", (req, res) => {
+  if (fs.existsSync(excelPath)) {
+    res.download(excelPath, "rsvp.xlsx");
+  } else {
+    res.status(404).json({ message: "Chưa có file RSVP nào." });
+  }
+});
+
+app.listen(PORT, () =>
+  console.log(`✅ Server đang chạy tại cổng ${PORT}`)
+);
