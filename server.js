@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 
 app.post("/api/rsvp", async (req, res) => {
   try {
-    const { name, attendance, message } = req.body;
+    const { name, attendance, message, relation } = req.body; // ✅ Thêm relation
     const workbook = new ExcelJS.Workbook();
     let worksheet;
 
@@ -35,10 +35,10 @@ app.post("/api/rsvp", async (req, res) => {
       worksheet = workbook.getWorksheet(1);
     } else {
       worksheet = workbook.addWorksheet("RSVP");
-      worksheet.addRow(["Tên", "Tham dự", "Lời chúc"]);
+      worksheet.addRow(["Tên", "Tham dự", "Lời chúc", "Mối quan hệ"]); // ✅ Thêm cột
     }
 
-    worksheet.addRow([name, attendance, message]);
+    worksheet.addRow([name, attendance, message, relation]); // ✅ Ghi thêm cột
     await workbook.xlsx.writeFile(excelPath);
 
     res.json({ success: true, message: "Gửi thành công!" });
@@ -60,6 +60,7 @@ app.get("/api/rsvp", async (req, res) => {
         name: row.getCell(1).value,
         attendance: row.getCell(2).value,
         message: row.getCell(3).value,
+        relation: row.getCell(4).value || "guest", // ✅ Đọc thêm relation
       }));
 
     res.json(data);
