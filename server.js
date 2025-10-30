@@ -24,9 +24,10 @@ app.use(
 
 app.use(bodyParser.json());
 
+// 💌 Ghi dữ liệu RSVP vào file Excel
 app.post("/api/rsvp", async (req, res) => {
   try {
-    const { name, attendance, message, relation } = req.body; // ✅ Thêm relation
+    const { name, attendance, message, relation, phone } = req.body; // ✅ thêm relation & phone
     const workbook = new ExcelJS.Workbook();
     let worksheet;
 
@@ -35,10 +36,10 @@ app.post("/api/rsvp", async (req, res) => {
       worksheet = workbook.getWorksheet(1);
     } else {
       worksheet = workbook.addWorksheet("RSVP");
-      worksheet.addRow(["Tên", "Tham dự", "Lời chúc", "Mối quan hệ"]); // ✅ Thêm cột
+      worksheet.addRow(["Tên", "Tham dự", "Lời chúc", "Mối quan hệ", "Số điện thoại"]); // ✅ thêm cột
     }
 
-    worksheet.addRow([name, attendance, message, relation]); // ✅ Ghi thêm cột
+    worksheet.addRow([name, attendance, message, relation, phone]); // ✅ ghi thêm cột
     await workbook.xlsx.writeFile(excelPath);
 
     res.json({ success: true, message: "Gửi thành công!" });
@@ -48,6 +49,7 @@ app.post("/api/rsvp", async (req, res) => {
   }
 });
 
+// 📄 Đọc dữ liệu RSVP
 app.get("/api/rsvp", async (req, res) => {
   try {
     const workbook = new ExcelJS.Workbook();
@@ -60,7 +62,8 @@ app.get("/api/rsvp", async (req, res) => {
         name: row.getCell(1).value,
         attendance: row.getCell(2).value,
         message: row.getCell(3).value,
-        relation: row.getCell(4).value || "guest", // ✅ Đọc thêm relation
+        relation: row.getCell(4).value || "guest", // ✅ đọc thêm relation
+        phone: row.getCell(5).value || "",
       }));
 
     res.json(data);
@@ -69,6 +72,7 @@ app.get("/api/rsvp", async (req, res) => {
   }
 });
 
+// 📥 Tải file RSVP
 app.get("/api/download", (req, res) => {
   if (fs.existsSync(excelPath)) {
     res.download(excelPath, "rsvp.xlsx");
