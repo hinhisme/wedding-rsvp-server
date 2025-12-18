@@ -16,7 +16,7 @@ const excelPath = path.join(__dirname, "rsvp.xlsx");
 app.use(
   cors({
     origin: [
-      "https://ngocthang-huyentrang.vercel.app",
+      "https://ducthien-minhchuc.vercel.app/",
       "http://localhost:5173",
     ],
   })
@@ -24,10 +24,9 @@ app.use(
 
 app.use(bodyParser.json());
 
-// 💌 Ghi dữ liệu RSVP vào file Excel
 app.post("/api/rsvp", async (req, res) => {
   try {
-    const { name, attendance, message, relation, phone } = req.body; // ✅ thêm relation & phone
+    const { name, attendance, message, relation, phone } = req.body;
     const workbook = new ExcelJS.Workbook();
     let worksheet;
 
@@ -36,10 +35,10 @@ app.post("/api/rsvp", async (req, res) => {
       worksheet = workbook.getWorksheet(1);
     } else {
       worksheet = workbook.addWorksheet("RSVP");
-      worksheet.addRow(["Tên", "Tham dự", "Lời chúc", "Mối quan hệ", "Số điện thoại"]); // ✅ thêm cột
+      worksheet.addRow(["Tên", "Tham dự", "Lời chúc", "Mối quan hệ", "Số điện thoại"]); 
     }
 
-    worksheet.addRow([name, attendance, message, relation, phone]); // ✅ ghi thêm cột
+    worksheet.addRow([name, attendance, message, relation, phone]);
     await workbook.xlsx.writeFile(excelPath);
 
     res.json({ success: true, message: "Gửi thành công!" });
@@ -62,7 +61,7 @@ app.get("/api/rsvp", async (req, res) => {
         name: row.getCell(1).value,
         attendance: row.getCell(2).value,
         message: row.getCell(3).value,
-        relation: row.getCell(4).value || "guest", // ✅ đọc thêm relation
+        relation: row.getCell(4).value || "guest",
         phone: row.getCell(5).value || "",
       }));
 
@@ -72,7 +71,6 @@ app.get("/api/rsvp", async (req, res) => {
   }
 });
 
-// 📥 Tải file RSVP
 app.get("/api/download", (req, res) => {
   if (fs.existsSync(excelPath)) {
     res.download(excelPath, "rsvp.xlsx");
