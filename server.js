@@ -16,7 +16,7 @@ const excelPath = path.join(__dirname, "rsvp.xlsx");
 app.use(
   cors({
     origin: [
-      "https://ducthien-minhchuc.vercel.app/",
+      "https://ducthien-minhchuc.vercel.app",
       "http://localhost:5173",
     ],
   })
@@ -48,7 +48,6 @@ app.post("/api/rsvp", async (req, res) => {
   }
 });
 
-// 📄 Đọc dữ liệu RSVP
 app.get("/api/rsvp", async (req, res) => {
   try {
     const workbook = new ExcelJS.Workbook();
