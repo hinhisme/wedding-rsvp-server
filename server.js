@@ -16,7 +16,7 @@ const excelPath = path.join(__dirname, "rsvp.xlsx");
 app.use(
   cors({
     origin: [
-      "https://ducthien-minhchuc.vercel.app",
+      "https://phankhoi-lethuy.vercel.app",
       "http://localhost:5173",
     ],
   })
